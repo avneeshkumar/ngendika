@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Install required system packages for PyAudio
 RUN apt-get update && apt-get install -y \
+    build-essential \
     portaudio19-dev \
     && apt-get clean
 
@@ -20,4 +21,4 @@ COPY server.py .
 EXPOSE 8101
 
 # Command to run the server
-CMD ["python", "audio_server.py"]
+CMD ["python", "server.py"]
