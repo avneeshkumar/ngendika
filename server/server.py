@@ -9,6 +9,7 @@ class AudioRelayServer:
 
     async def relay(self, sender, data):
         recipients = [client for client in self.clients if client != sender]
+        print(f"Relaying audio from client {id(sender)} to {[id(c) for c in recipients]}")
         for client in recipients:
             try:
                 await client.send(data)
@@ -17,7 +18,7 @@ class AudioRelayServer:
 
     async def handle_connection(self, websocket, path=None):
         self.clients.add(websocket)
-        print(f"Client connected. Total clients: {len(self.clients)}")
+        print(f"Client connected (id={id(websocket)}). Total clients: {len(self.clients)}")
         try:
             async for data in websocket:
                 await self.relay(websocket, data)
@@ -27,7 +28,7 @@ class AudioRelayServer:
             print(f"Error in websocket handling: {e}")
         finally:
             self.clients.remove(websocket)
-            print(f"Client disconnected. Total clients: {len(self.clients)}")
+            print(f"Client disconnected (id={id(websocket)}). Total clients: {len(self.clients)}")
 
     async def start(self):
         async with websockets.serve(self.handle_connection, self.host, self.port, ping_timeout=None, ping_interval=10):
