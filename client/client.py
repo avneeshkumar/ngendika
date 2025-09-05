@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import pyaudio
 import sys
+import time
 
 class AudioClient:
     def __init__(self, name=None):
@@ -14,12 +15,14 @@ class AudioClient:
     async def send_audio(self, websocket, stream):
         try:
             count = 0
+            chunk_duration = self.chunk / self.rate  # seconds per chunk
             while True:
                 data = stream.read(self.chunk, exception_on_overflow=False)
                 await websocket.send(data)
                 count += 1
                 if count % 100 == 0:
                     print(f"[{self.name}] Sent {count} audio chunks")
+                await asyncio.sleep(chunk_duration)  # maintain real-time pace
         except Exception as e:
             print(f"[{self.name}] ERROR sending audio: {e}")
             sys.exit(1)
