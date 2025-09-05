@@ -11,7 +11,7 @@ class AudioServer:
         self.channels = 1
         self.rate = 44100
 
-    async def handle_connection(self, websocket, path):
+    async def handle_connection(self, websocket, path=None):  # <-- Updated signature
         p = pyaudio.PyAudio()
         print("Streaming audio...")
         try:
@@ -43,5 +43,5 @@ class AudioServer:
             await asyncio.Future()
 
 if __name__ == "__main__":
-    server = AudioServer("0.0.0.0", 8765)
+    server = AudioServer("192.168.1.45", 8766)
     asyncio.run(server.start())

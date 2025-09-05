@@ -11,7 +11,7 @@ class AudioClient:
         self.rate = 44100
 
     async def run(self):
-        uri = f"wss://<your websocket url>"
+        uri = f"ws://192.168.1.45:8766"
         async with websockets.connect(uri, ping_interval=10, ping_timeout=None) as websocket:
             print("Streaming audio...")
 
