@@ -3,6 +3,8 @@ import websockets
 import pyaudio
 import sys
 import time
+import struct
+import numpy as np
 
 class AudioClient:
     def __init__(self, name=None):
@@ -13,15 +15,30 @@ class AudioClient:
         self.name = name or str(id(self))
 
     async def send_audio(self, websocket, stream):
+        def rms(data):
+            """Calculates root mean square (RMS) for audio energy, safely."""
+            shorts = np.frombuffer(data, dtype=np.int16)
+            if shorts.size == 0:
+                return 0
+            mean_sq = np.mean(shorts.astype(np.float32)**2)
+            if np.isnan(mean_sq) or mean_sq < 1e-10:
+                return 0
+            return np.sqrt(mean_sq)
+
+        THRESHOLD = 500  # Adjust this value as needed for your environment
         try:
             count = 0
             chunk_duration = self.chunk / self.rate  # seconds per chunk
             while True:
                 data = stream.read(self.chunk, exception_on_overflow=False)
-                await websocket.send(data)
-                count += 1
-                if count % 100 == 0:
-                    print(f"[{self.name}] Sent {count} audio chunks")
+                # Noise gate: skip chunk if energy below threshold
+                if rms(data) > THRESHOLD:
+                    await websocket.send(data)
+                    count += 1
+                    if count % 100 == 0:
+                        print(f"[{self.name}] Sent {count} audio chunks")
+                else:
+                    pass  # Silence (not sending low-energy chunk)
                 await asyncio.sleep(chunk_duration)  # maintain real-time pace
         except Exception as e:
             print(f"[{self.name}] ERROR sending audio: {e}")
